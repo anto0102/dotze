@@ -25,13 +25,18 @@ type ExportedVault struct {
 func Share(local bool, out string) {
 	key, err := internal.GetKey()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m %v\n", err)
 		os.Exit(1)
 	}
 
 	vault, err := internal.ReadVault(".dotze", key)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Failed to read vault: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Failed to read vault: %v\n", err)
+		os.Exit(1)
+	}
+
+	if len(vault.Secrets) == 0 {
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m No secrets to share. Add some with: dotze set KEY value\n")
 		os.Exit(1)
 	}
 
@@ -45,14 +50,14 @@ func Share(local bool, out string) {
 func shareOnline(vault *internal.Vault) {
 	plaintext, err := json.Marshal(vault)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Failed to marshal vault: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Failed to marshal vault: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Generate random password
 	passwordBytes := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, passwordBytes); err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Failed to generate password: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Failed to generate password: %v\n", err)
 		os.Exit(1)
 	}
 	password := base64.RawURLEncoding.EncodeToString(passwordBytes)
@@ -71,7 +76,7 @@ func shareOnline(vault *internal.Vault) {
 	// Upload to paste.rs
 	pasteURL, err := uploadToPaste(b64Data)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Upload failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Upload failed: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -79,33 +84,33 @@ func shareOnline(vault *internal.Vault) {
 	parts := strings.Split(strings.TrimRight(pasteURL, "/"), "/")
 	id := parts[len(parts)-1]
 
-	fmt.Printf("✓ Share link (expires when pulled):\n")
+	fmt.Printf("\033[32m ✓ \033[0m Share link (expires when pulled):\n")
 	fmt.Printf("  https://paste.rs/%s#%s\n\n", id, password)
-	fmt.Printf("⚠  Send this link securely. Delete manually with:\n")
+	fmt.Printf("\033[33m ⚠ \033[0m Send this link securely. Delete manually with:\n")
 	fmt.Printf("  dotze revoke https://paste.rs/%s#%s\n", id, password)
 }
 
 func shareLocal(vault *internal.Vault, out string) {
 	pass, err := internal.ReadPassword("Enter password: ")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Error reading password: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Error reading password: %v\n", err)
 		os.Exit(1)
 	}
 	confirm, _ := internal.ReadPassword("Confirm password: ")
 	if pass != confirm {
-		fmt.Fprintf(os.Stderr, "✗ Passwords do not match\n")
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Passwords do not match\n")
 		os.Exit(1)
 	}
 
 	salt := make([]byte, 32)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Salt generation failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Salt generation failed: %v\n", err)
 		os.Exit(1)
 	}
 
 	key, err := internal.DeriveKey(pass, salt)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Key derivation failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Key derivation failed: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -129,13 +134,13 @@ func shareLocal(vault *internal.Vault, out string) {
 
 	content, _ := json.Marshal(exp)
 	if err := os.WriteFile(out, content, 0600); err != nil {
-		fmt.Fprintf(os.Stderr, "✗ Failed to write file: %v\n", err)
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Failed to write file: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("✓ Exported to %s\n", out)
-	fmt.Printf("ℹ  Share this file and your password separately.\n")
-	fmt.Printf("ℹ  Recipient runs: dotze pull %s\n", out)
+	fmt.Printf("\033[32m ✓ \033[0m Exported to %s\n", out)
+	fmt.Printf("\033[34m ℹ \033[0m Share this file and your password separately.\n")
+	fmt.Printf("\033[34m ℹ \033[0m Recipient runs: dotze pull %s\n", out)
 }
 
 func uploadToPaste(data string) (string, error) {

@@ -1,9 +1,9 @@
+//go:build !windows
+
 package internal
 
 import (
 	"bufio"
-	"crypto/hkdf"
-	"crypto/sha256"
 	"fmt"
 	"os"
 	"strings"
@@ -37,8 +37,4 @@ func ReadPassword(prompt string) (string, error) {
 	password, _ := reader.ReadString('\n')
 	fmt.Println()
 	return strings.TrimRight(password, "\r\n"), nil
-}
-
-func DeriveKey(password string, salt []byte) ([]byte, error) {
-	return hkdf.Key(sha256.New, []byte(password), salt, "dotze-share-v1", 32)
 }
