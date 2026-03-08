@@ -22,17 +22,17 @@ func Pull(target string) {
 }
 
 func pullOnline(urlStr string) {
-	// url format: https://paste.rs/abc123#password
+	// url format: https://0x0.st/abc.txt#password
 	parts := strings.Split(urlStr, "#")
 	if len(parts) < 2 {
 		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m URL missing password fragment (#)\n")
 		os.Exit(1)
 	}
-	pasteURL := parts[0]
+	fileURL := parts[0]
 	passwordStr := parts[1]
 
 	// Download
-	resp, err := http.Get(pasteURL)
+	resp, err := http.Get(fileURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Download failed: %v\n", err)
 		os.Exit(1)
@@ -40,7 +40,7 @@ func pullOnline(urlStr string) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 404 {
-		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Link not found or already used\n")
+		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Remote file not found or expired\n")
 		os.Exit(1)
 	}
 	if resp.StatusCode != 200 {
@@ -76,13 +76,7 @@ func pullOnline(urlStr string) {
 	}
 
 	if confirmAndImport(&vault) {
-		// DELETE paste
-		err := deletePaste(pasteURL)
-		if err != nil {
-			fmt.Printf("\033[33m ⚠ \033[0m Could not delete remote paste. Delete manually.\n")
-		} else {
-			fmt.Printf("\033[32m ✓ \033[0m Remote paste deleted\n")
-		}
+		fmt.Printf("\033[34m ℹ \033[0m Remote file will expire automatically.\n")
 	}
 }
 

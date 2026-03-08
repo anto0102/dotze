@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -8,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
@@ -73,21 +75,19 @@ func shareOnline(vault *internal.Vault) {
 	// Convert to base64
 	b64Data := base64.StdEncoding.EncodeToString(encrypted)
 
-	// Upload to paste.rs
+	// Upload to 0x0.st
 	pasteURL, err := uploadToPaste(b64Data)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "\033[31m ✗ \033[0m Upload failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Extract ID (e.g., https://paste.rs/abc -> abc)
-	parts := strings.Split(strings.TrimRight(pasteURL, "/"), "/")
-	id := parts[len(parts)-1]
+	// No parsing needed for 0x0.st as we use the direct URL
 
-	fmt.Printf("\033[32m ✓ \033[0m Share link (expires when pulled):\n")
-	fmt.Printf("  https://paste.rs/%s#%s\n\n", id, password)
-	fmt.Printf("\033[33m ⚠ \033[0m Send this link securely. Delete manually with:\n")
-	fmt.Printf("  dotze revoke https://paste.rs/%s#%s\n", id, password)
+	fmt.Printf("\033[32m ✓ \033[0m Share link (expires in 24h):\n")
+	fmt.Printf("  %s#%s\n\n", pasteURL, password)
+	fmt.Printf("\033[33m ⚠ \033[0m This link cannot be manually revoked.\n")
+	fmt.Printf("    It expires automatically after 24 hours.\n")
 }
 
 func shareLocal(vault *internal.Vault, out string) {
@@ -144,18 +144,30 @@ func shareLocal(vault *internal.Vault, out string) {
 }
 
 func uploadToPaste(data string) (string, error) {
-	req, err := http.NewRequest("POST", "https://paste.rs/", strings.NewReader(data))
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	part, err := writer.CreateFormFile("file", "secrets")
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", "dotze/1.0")
+	part.Write([]byte(data))
+	writer.Close()
+
+	req, err := http.NewRequest("POST", "https://0x0.st", &buf)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("User-Agent", "dotze/2.0")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 201 && resp.StatusCode != 206 && resp.StatusCode != 200 {
+
+	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("upload failed: %d", resp.StatusCode)
 	}
 	body, _ := io.ReadAll(resp.Body)

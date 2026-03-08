@@ -135,12 +135,12 @@ dotze offers two ways to share secrets securely.
 
 ```bash
 dotze share
-# ✓ Share link (expires when pulled):
-#   https://paste.rs/abc123#password...
-# ⚠  Send this link securely.
+# ✓ Share link (expires in 24h):
+#   https://0x0.st/abc.txt#password...
+# ⚠  This link cannot be manually revoked.
 ```
 
-The secrets are encrypted locally before upload. The decryption password lives in the URL fragment (`#password`) and is **never sent to the server**. The link works once — dotze automatically deletes the remote paste after the recipient pulls it.
+The secrets are encrypted locally before upload. The decryption password lives in the URL fragment (`#password`) and is **never sent to the server**. The link is hosted on 0x0.st and expires automatically after 24 hours.
 
 #### Via encrypted file (offline)
 
@@ -161,11 +161,11 @@ Generates an encrypted file you can send via Slack, email, or AirDrop. The file 
 
 ```bash
 # From a share link
-dotze pull https://paste.rs/abc123#password...
+dotze pull https://0x0.st/abc.txt#password...
 # Found 3 secrets: API_KEY, DATABASE_URL, STRIPE_KEY
 # Import all? [y/N]: y
 # ✓ Imported 3 secrets
-# ✓ Remote paste deleted
+# ℹ  Remote file will expire automatically.
 
 # From an encrypted file
 dotze pull secrets.enc
@@ -175,33 +175,17 @@ dotze pull secrets.enc
 # ✓ Imported 3 secrets from secrets.enc
 ```
 
----
-
-### Revoke a share link
-
-If you shared a link but want to invalidate it before the recipient pulls it:
-
-```bash
-dotze revoke https://paste.rs/abc123#password...
-# ✓ Remote paste deleted
-```
-
----
 
 ## How it works
 
 Each project gets a unique AES-256 key generated on `dotze init`. The key is stored in `~/.dotze/keys/<sha256-of-project-path>.key` and never leaves your machine. Secrets are encrypted using AES-256-GCM and stored in a `.dotze` file in your project directory.
 
-When sharing, dotze generates a one-time AES-256 key, encrypts the secrets with it, uploads the ciphertext to [paste.rs](https://paste.rs), and embeds the decryption key in the URL fragment — a part of the URL that browsers and HTTP clients never send to servers by design. The remote paste is deleted automatically after the first pull.
+When sharing, dotze generates a one-time AES-256 key, encrypts the secrets with it, uploads the ciphertext to [0x0.st](https://0x0.st), and embeds the decryption key in the URL fragment — a part of the URL that browsers and HTTP clients never send to servers by design. The remote file expires automatically after 24 hours.
 
 ---
 
 ## Roadmap
 
-- [x] `dotze share` — one-time encrypted link
-- [x] `dotze share --local` — encrypted file export
-- [x] `dotze pull` — import from link or file
-- [x] `dotze revoke` — delete a remote paste
 - [ ] `dotze git-hook install` — pre-commit hook that blocks plain `.env` files
 - [ ] Homebrew distribution
 - [ ] Team sync via S3 or git

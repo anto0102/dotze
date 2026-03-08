@@ -86,12 +86,6 @@ func main() {
 			os.Exit(1)
 		}
 		cmd.Pull(os.Args[2])
-	case "revoke":
-		if len(os.Args) < 3 {
-			fmt.Fprintf(os.Stderr, "✗ Usage: dotze revoke <url>\n")
-			os.Exit(1)
-		}
-		cmd.Revoke(os.Args[2])
 	case "help", "-h", "--help":
 		printHelp()
 	default:
@@ -114,6 +108,5 @@ func printHelp() {
 	fmt.Println("  dotze share                  Share secrets via encrypted link")
 	fmt.Println("  dotze share --local          Export secrets to encrypted file")
 	fmt.Println("  dotze pull <url|file>        Import secrets from link or file")
-	fmt.Println("  dotze revoke <url>           Delete a remote shared paste")
 	fmt.Println("  dotze help                   Show this help")
 }
