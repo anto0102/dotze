@@ -4,3 +4,5 @@ dotze
 .dotze
 
 dist/
+test.enc
+secrets.enc

@@ -14,11 +14,18 @@ A zero-dependency CLI secret manager for developers. Encrypts your secrets local
 
 - **`.env` files store secrets in plain text.** dotze encrypts everything with AES-256-GCM before touching disk.
 - **No account, no server, no config.** Works fully offline. Your keys never leave your machine.
+- **Share secrets safely.** Send an encrypted one-time link to a teammate — no Slack, no email, no plaintext.
 - **Language agnostic.** Works with any runtime — Node, Python, Go, Ruby, anything.
 
 ---
 
 ## Installation
+
+### go install
+
+```bash
+go install github.com/anto0102/dotze@latest
+```
 
 ### From source
 
@@ -26,7 +33,7 @@ A zero-dependency CLI secret manager for developers. Encrypts your secrets local
 git clone https://github.com/anto0102/dotze
 cd dotze
 go build -ldflags="-s -w" -o dotze .
-mv dotze /usr/local/bin/
+sudo mv dotze /usr/local/bin/
 ```
 
 ### Homebrew
@@ -45,7 +52,7 @@ brew install dotze  # coming soon
 dotze init
 ```
 
-Creates an encrypted `.dotze` vault in the current directory and stores the key in `~/.dotze/keys/`.
+Creates an encrypted `.dotze` vault in the current directory. The decryption key is stored in `~/.dotze/keys/` and never leaves your machine.
 
 ---
 
@@ -120,16 +127,82 @@ dotze import .env.prod # reads a specific file
 
 ---
 
+### Share secrets with a teammate
+
+dotze offers two ways to share secrets securely.
+
+#### Via encrypted link (online)
+
+```bash
+dotze share
+# ✓ Share link (expires when pulled):
+#   https://paste.rs/abc123#password...
+# ⚠  Send this link securely.
+```
+
+The secrets are encrypted locally before upload. The decryption password lives in the URL fragment (`#password`) and is **never sent to the server**. The link works once — dotze automatically deletes the remote paste after the recipient pulls it.
+
+#### Via encrypted file (offline)
+
+```bash
+dotze share --local
+# Enter password:
+# Confirm password:
+# ✓ Exported to secrets.enc
+
+dotze share --local --out myteam.enc  # custom filename
+```
+
+Generates an encrypted file you can send via Slack, email, or AirDrop. The file is useless without the password.
+
+---
+
+### Pull secrets from a link or file
+
+```bash
+# From a share link
+dotze pull https://paste.rs/abc123#password...
+# Found 3 secrets: API_KEY, DATABASE_URL, STRIPE_KEY
+# Import all? [y/N]: y
+# ✓ Imported 3 secrets
+# ✓ Remote paste deleted
+
+# From an encrypted file
+dotze pull secrets.enc
+# Enter password:
+# Found 3 secrets: API_KEY, DATABASE_URL, STRIPE_KEY
+# Import all? [y/N]: y
+# ✓ Imported 3 secrets from secrets.enc
+```
+
+---
+
+### Revoke a share link
+
+If you shared a link but want to invalidate it before the recipient pulls it:
+
+```bash
+dotze revoke https://paste.rs/abc123#password...
+# ✓ Remote paste deleted
+```
+
+---
+
 ## How it works
 
-Each project gets a unique AES-256 key generated on `dotze init`. The key is stored in `~/.dotze/keys/<sha256-of-project-path>.key` and never leaves your machine. Secrets are encrypted using AES-256-GCM and stored in a `.dotze` file in your project directory. The `.dotze` file contains only ciphertext — safe to commit if you choose to, useless without the key.
+Each project gets a unique AES-256 key generated on `dotze init`. The key is stored in `~/.dotze/keys/<sha256-of-project-path>.key` and never leaves your machine. Secrets are encrypted using AES-256-GCM and stored in a `.dotze` file in your project directory.
+
+When sharing, dotze generates a one-time AES-256 key, encrypts the secrets with it, uploads the ciphertext to [paste.rs](https://paste.rs), and embeds the decryption key in the URL fragment — a part of the URL that browsers and HTTP clients never send to servers by design. The remote paste is deleted automatically after the first pull.
 
 ---
 
 ## Roadmap
 
-- [ ] `dotze share` — generate a one-time encrypted link to share secrets with a teammate
-- [ ] `dotze git-hook install` — pre-commit hook that blocks plain `.env` files from being committed
+- [x] `dotze share` — one-time encrypted link
+- [x] `dotze share --local` — encrypted file export
+- [x] `dotze pull` — import from link or file
+- [x] `dotze revoke` — delete a remote paste
+- [ ] `dotze git-hook install` — pre-commit hook that blocks plain `.env` files
 - [ ] Homebrew distribution
 - [ ] Team sync via S3 or git
 

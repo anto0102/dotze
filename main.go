@@ -66,6 +66,32 @@ func main() {
 			filename = os.Args[2]
 		}
 		cmd.Import(filename)
+	case "share":
+		local := false
+		out := "secrets.enc"
+		for i := 2; i < len(os.Args); i++ {
+			arg := os.Args[i]
+			if arg == "--local" {
+				local = true
+			}
+			if arg == "--out" && i+1 < len(os.Args) {
+				out = os.Args[i+1]
+				i++
+			}
+		}
+		cmd.Share(local, out)
+	case "pull":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "✗ Usage: dotze pull <url-or-file>\n")
+			os.Exit(1)
+		}
+		cmd.Pull(os.Args[2])
+	case "revoke":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "✗ Usage: dotze revoke <url>\n")
+			os.Exit(1)
+		}
+		cmd.Revoke(os.Args[2])
 	case "help", "-h", "--help":
 		printHelp()
 	default:
@@ -85,5 +111,9 @@ func printHelp() {
 	fmt.Println("  dotze delete <KEY>           Delete a secret")
 	fmt.Println("  dotze run -- <command>       Run a command with secrets as env vars")
 	fmt.Println("  dotze import [file]          Import secrets from .env file (default: .env)")
+	fmt.Println("  dotze share                  Share secrets via encrypted link")
+	fmt.Println("  dotze share --local          Export secrets to encrypted file")
+	fmt.Println("  dotze pull <url|file>        Import secrets from link or file")
+	fmt.Println("  dotze revoke <url>           Delete a remote shared paste")
 	fmt.Println("  dotze help                   Show this help")
 }
