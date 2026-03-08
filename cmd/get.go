@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tuonome/dotze/internal"
+	"github.com/anto0102/dotze/internal"
 )
 
 func Get(keyStr string) {
@@ -26,5 +26,5 @@ func Get(keyStr string) {
 		os.Exit(1)
 	}
 
-	fmt.Print(val)
+	fmt.Println(val)
 }

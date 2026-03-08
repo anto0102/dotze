@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tuonome/dotze/cmd"
+	"github.com/anto0102/dotze/cmd"
 )
 
 func main() {

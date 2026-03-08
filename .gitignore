@@ -2,3 +2,5 @@
 dotze
 .env.test
 .dotze
+
+dist/

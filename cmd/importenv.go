@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tuonome/dotze/internal"
+	"github.com/anto0102/dotze/internal"
 )
 
 func Import(filename string) {

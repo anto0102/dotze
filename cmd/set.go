@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tuonome/dotze/internal"
+	"github.com/anto0102/dotze/internal"
 )
 
 func Set(keyStr, value string) {

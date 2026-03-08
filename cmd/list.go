@@ -3,8 +3,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	"github.com/tuonome/dotze/internal"
+	"github.com/anto0102/dotze/internal"
 )
 
 func List(showValues bool) {
@@ -20,9 +21,14 @@ func List(showValues bool) {
 		os.Exit(1)
 	}
 
-	for k, v := range vault.Secrets {
+	keys := make([]string, 0, len(vault.Secrets))
+	for k := range vault.Secrets {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
 		if showValues {
-			fmt.Printf("%s=%s\n", k, v)
+			fmt.Printf("%s=%s\n", k, vault.Secrets[k])
 		} else {
 			fmt.Println(k)
 		}
